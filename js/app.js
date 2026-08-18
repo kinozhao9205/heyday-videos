@@ -89,9 +89,9 @@
         <div class="card-thumbnail">
           <span class="card-tag">${v.tag || v.category}</span>
           <div class="card-loader"></div>
-          <video muted playsinline preload="metadata" src="${v.src}"
-                 controlsList="nodownload" disablepictureinpicture
-                 draggable="false" oncontextmenu="return false"></video>
+          <img class="card-poster" loading="lazy" src="${v.poster}"
+               alt="${v.title}" draggable="false"
+               oncontextmenu="return false">
           <div class="play-btn">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           </div>
@@ -111,29 +111,15 @@
       </div>
     `).join('');
 
-    // 为每个卡片的 video 绑定首帧提取
+    // 缩略图加载完成/失败后隐藏加载动画
     grid.querySelectorAll('.video-card').forEach(card => {
-      const vid = card.querySelector('video');
+      const img = card.querySelector('.card-poster');
       const loader = card.querySelector('.card-loader');
 
-      vid.addEventListener('loadeddata', () => {
-        // 尝试 seek 到 1 秒处截取首帧作为缩略图
-        try {
-          vid.currentTime = Math.min(1, (vid.duration || 2) * 0.1);
-        } catch (e) {
-          if (loader) loader.style.display = 'none';
-        }
-      });
-
-      vid.addEventListener('seeked', () => {
-        if (loader) loader.style.display = 'none';
-      });
-
-      vid.addEventListener('error', () => {
-        if (loader) {
-          loader.style.display = 'none';
-        }
-      });
+      if (img) {
+        img.addEventListener('load', () => { if (loader) loader.style.display = 'none'; });
+        img.addEventListener('error', () => { if (loader) loader.style.display = 'none'; });
+      }
 
       card.addEventListener('click', () => openPlayer(card.dataset.id));
 

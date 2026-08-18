@@ -376,7 +376,8 @@ body {
   overflow: hidden;
 }
 
-.card-thumbnail video {
+.card-thumbnail video,
+.card-thumbnail img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -753,17 +754,6 @@ body {
   color: var(--text-muted);
 }
 
-.footer-contact {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.footer-contact p {
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
 .footer-bottom {
   margin-top: 24px;
   padding-top: 16px;
@@ -810,10 +800,6 @@ body {
     justify-content: space-between;
     align-items: center;
     text-align: left;
-  }
-  .footer-contact {
-    flex-direction: row;
-    gap: 24px;
   }
   .player-info { padding: 20px 8px 0; }
   .player-title { font-size: 22px; }
