@@ -140,7 +140,6 @@
     if (!v) return;
 
     currentVideoId = id;
-    playerVideo.src = v.src;
     playerTitle.textContent = v.title;
     playerDesc.textContent = v.desc;
     playerTag.textContent = v.tag || v.category;
@@ -153,12 +152,41 @@
       history.replaceState(null, '', '#' + id);
     }
 
-    // 自动播放
-    const playPromise = playerVideo.play();
-    if (playPromise) {
-      playPromise.catch(() => {
-        // 自动播放被阻止，用户需手动点击
-      });
+    // Apple WebKit 回退：仅在不支持 HTTP Range 的沙盒域名（app.workbuddy.link）生效。
+    // COS / GitHub Pages 均支持 Range 流式播放，直接原生播放即可。
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isMacSafari = /Macintosh/.test(ua) && /Safari/.test(ua) &&
+      !/Chrome/.test(ua) && !/Edg/.test(ua);
+    const needsBlobFallback = (isIOS || isMacSafari) &&
+      /app\.workbuddy\.link$/.test(location.hostname);
+
+    if (needsBlobFallback) {
+      showToast('视频加载中…');
+      fetch(v.src)
+        .then(r => {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.blob();
+        })
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          playerVideo.src = blobUrl;
+          playerVideo.play().catch(() => {});
+          showToast('视频加载完成');
+        })
+        .catch(err => {
+          showToast('视频加载失败，请重试');
+          console.error('Video fetch error:', err);
+        });
+    } else {
+      playerVideo.src = v.src;
+      const playPromise = playerVideo.play();
+      if (playPromise) {
+        playPromise.catch(() => {
+          // 自动播放被阻止，用户需手动点击
+        });
+      }
     }
   }
 
@@ -166,6 +194,11 @@
   function closePlayer() {
     overlay.classList.remove('open');
     playerVideo.pause();
+    // 释放 Blob URL（macOS Safari 回退机制使用）
+    const src = playerVideo.src;
+    if (src && src.startsWith('blob:')) {
+      URL.revokeObjectURL(src);
+    }
     playerVideo.removeAttribute('src');
     playerVideo.load();
     document.body.style.overflow = '';
