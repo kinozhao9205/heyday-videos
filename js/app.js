@@ -1,6 +1,6 @@
 /**
  * HEYDAY VIDEO — 应用主逻辑
- * 视频画廊 · 搜索 · 筛选 · 播放器
+ * 视频画廊 · 搜索 · 筛选 · 播放器 · 多语言(zh-Hant/en/ru/uz)
  */
 
 (function () {
@@ -11,6 +11,43 @@
   let currentSearch = '';
   let renderedVideos = [];
   let currentVideoId = null;
+
+  // --- 多语言 ---
+  const LANG_KEY = 'heyday-lang';
+  let currentLang = detectLang();
+
+  function detectLang() {
+    // 1) 用户手动选择过的语言优先
+    try {
+      const saved = localStorage.getItem(LANG_KEY);
+      if (saved && I18N.ui.pageTitle[saved]) return saved;
+    } catch (e) { /* 隐私模式等 */ }
+    // 2) 首次访问按浏览器语言自动匹配
+    const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
+    if (nav.indexOf('ru') === 0) return 'ru';
+    if (nav.indexOf('uz') === 0) return 'uz';
+    if (nav.indexOf('en') === 0) return 'en';
+    if (nav.indexOf('zh') === 0) return 'zh-Hant';
+    // 3) 兜底：繁体中文
+    return I18N.defaultLang;
+  }
+
+  // UI 文案
+  function t(key) {
+    const entry = I18N.ui[key];
+    return (entry && (entry[currentLang] || entry[I18N.defaultLang])) || '';
+  }
+  // 视频字段（title/desc/tag）
+  function tv(id, field) {
+    const v = I18N.videos[id];
+    if (!v || !v[field]) return '';
+    return v[field][currentLang] || v[field][I18N.defaultLang] || '';
+  }
+  // 分类名
+  function catName(cat) {
+    const entry = I18N.cats[cat];
+    return (entry && (entry[currentLang] || entry[I18N.defaultLang])) || cat;
+  }
 
   // --- DOM ---
   const grid = document.getElementById('videoGrid');
@@ -27,6 +64,80 @@
   const playerTag = document.getElementById('playerTag');
   const playerShareBtn = document.getElementById('playerShareBtn');
   const toast = document.getElementById('toast');
+  const langSwitcher = document.getElementById('langSwitcher');
+  const langFab = document.getElementById('langFab');
+  const langFabLabel = document.getElementById('langFabLabel');
+  const langPanel = document.getElementById('langPanel');
+  const langPanelTitle = document.getElementById('langPanelTitle');
+
+  // --- 应用静态界面文案 ---
+  function applyUI() {
+    document.title = t('pageTitle');
+    document.documentElement.lang = currentLang;
+    searchInput.placeholder = t('searchPlaceholder');
+    document.querySelector('.title-line-1').textContent = t('heroTitle');
+    document.querySelector('.hero-desc').textContent = t('heroDesc');
+    const statLabels = document.querySelectorAll('.stat-label');
+    if (statLabels.length >= 3) {
+      statLabels[0].textContent = t('statVideos');
+      statLabels[1].textContent = t('statCats');
+      statLabels[2].textContent = t('statOriginal');
+    }
+    emptyState.querySelector('p').textContent = t('emptyState');
+    document.getElementById('shareBtnLabel').textContent = t('shareBtn');
+    playerShareBtn.setAttribute('aria-label', t('shareBtn'));
+    playerShareBtn.title = t('shareBtn');
+    document.getElementById('footerCompany').textContent = t('footerCompany');
+    // 悬浮窗
+    const cur = I18N.langs.find(l => l.code === currentLang);
+    langFabLabel.textContent = cur ? cur.short : '中';
+    langFab.title = t('langFabTitle');
+    langFab.setAttribute('aria-label', t('langFabTitle'));
+    langPanelTitle.textContent = currentLang === 'zh-Hant' ? '語言 / Language'
+      : (currentLang === 'en' ? 'Language / Язык'
+      : (currentLang === 'ru' ? 'Язык / Til' : 'Til / Language'));
+    // 语言选项选中态
+    langPanel.querySelectorAll('.lang-option').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.lang === currentLang);
+    });
+  }
+
+  // --- 切换语言 ---
+  function setLang(code) {
+    if (!I18N.ui.pageTitle[code]) return;
+    currentLang = code;
+    try { localStorage.setItem(LANG_KEY, code); } catch (e) { /* ignore */ }
+    applyUI();
+    renderChips();
+    renderVideos();
+    // 若播放器开着，即时更新其文案
+    if (currentVideoId && overlay.classList.contains('open')) {
+      const v = VIDEOS.find(x => x.id === currentVideoId);
+      if (v) {
+        playerTitle.textContent = tv(v.id, 'title');
+        playerDesc.textContent = tv(v.id, 'desc');
+        playerTag.textContent = tv(v.id, 'tag') || catName(v.category);
+      }
+    }
+    closeLangPanel();
+  }
+
+  // --- 悬浮窗交互 ---
+  function closeLangPanel() {
+    langSwitcher.classList.remove('open');
+  }
+  langFab.addEventListener('click', (e) => {
+    e.stopPropagation();
+    langSwitcher.classList.toggle('open');
+  });
+  langPanel.addEventListener('click', (e) => e.stopPropagation());
+  langPanel.querySelectorAll('.lang-option').forEach(btn => {
+    btn.addEventListener('click', () => setLang(btn.dataset.lang));
+  });
+  document.addEventListener('click', () => closeLangPanel());
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeLangPanel();
+  });
 
   // --- 获取分类 ---
   function getCategories() {
@@ -45,7 +156,7 @@
     const cats = getCategories();
     filterChips.innerHTML = cats.map(cat => `
       <button class="chip ${cat.name === currentCategory ? 'active' : ''}" data-cat="${cat.name}">
-        ${cat.name}<span class="chip-count">${cat.count}</span>
+        ${catName(cat.name)}<span class="chip-count">${cat.count}</span>
       </button>
     `).join('');
 
@@ -59,15 +170,24 @@
     });
   }
 
-  // --- 过滤视频 ---
+  // --- 当前语言下的视频显示文本 ---
+  function vTitle(v) { return tv(v.id, 'title') || v.title; }
+  function vDesc(v) { return tv(v.id, 'desc') || v.desc; }
+  function vTag(v) { return tv(v.id, 'tag') || v.tag || v.category; }
+
+  // --- 过滤视频（按当前语言文本搜索） ---
   function getFilteredVideos() {
     return VIDEOS.filter(v => {
       const matchCat = currentCategory === '全部' || v.category === currentCategory;
+      const title = vTitle(v).toLowerCase();
+      const desc = vDesc(v).toLowerCase();
+      const cat = catName(v.category).toLowerCase();
+      const tag = vTag(v).toLowerCase();
       const matchSearch = !currentSearch ||
-        v.title.toLowerCase().includes(currentSearch) ||
-        v.desc.toLowerCase().includes(currentSearch) ||
-        v.category.toLowerCase().includes(currentSearch) ||
-        (v.tag && v.tag.toLowerCase().includes(currentSearch));
+        title.includes(currentSearch) ||
+        desc.includes(currentSearch) ||
+        cat.includes(currentSearch) ||
+        tag.includes(currentSearch);
       return matchCat && matchSearch;
     });
   }
@@ -87,10 +207,10 @@
     grid.innerHTML = filtered.map((v, i) => `
       <div class="video-card" data-id="${v.id}" style="animation-delay:${i * 60}ms">
         <div class="card-thumbnail">
-          <span class="card-tag">${v.tag || v.category}</span>
+          <span class="card-tag">${vTag(v)}</span>
           <div class="card-loader"></div>
           <img class="card-poster" loading="lazy" src="${v.poster}"
-               alt="${v.title}" draggable="false"
+               alt="${vTitle(v)}" draggable="false"
                oncontextmenu="return false">
           <div class="play-btn">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -98,15 +218,15 @@
         </div>
         <div class="card-info">
           <div class="card-info-head">
-            <h3 class="card-title">${v.title}</h3>
-            <button class="share-mini" data-share="${v.id}" aria-label="转发" title="转发">
+            <h3 class="card-title">${vTitle(v)}</h3>
+            <button class="share-mini" data-share="${v.id}" aria-label="${t('shareBtn')}" title="${t('shareBtn')}">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
                 <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
               </svg>
             </button>
           </div>
-          <p class="card-desc">${v.desc}</p>
+          <p class="card-desc">${vDesc(v)}</p>
         </div>
       </div>
     `).join('');
@@ -140,9 +260,9 @@
     if (!v) return;
 
     currentVideoId = id;
-    playerTitle.textContent = v.title;
-    playerDesc.textContent = v.desc;
-    playerTag.textContent = v.tag || v.category;
+    playerTitle.textContent = vTitle(v);
+    playerDesc.textContent = vDesc(v);
+    playerTag.textContent = vTag(v);
 
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -153,7 +273,7 @@
     }
 
     // Apple WebKit 回退：仅在不支持 HTTP Range 的沙盒域名（app.workbuddy.link）生效。
-    // COS / GitHub Pages 均支持 Range 流式播放，直接原生播放即可。
+    // COS / GitHub Pages / 阿里云 ECS 均支持 Range 流式播放，直接原生播放即可。
     const ua = navigator.userAgent;
     const isIOS = /iPad|iPhone|iPod/.test(ua) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -163,7 +283,7 @@
       /app\.workbuddy\.link$/.test(location.hostname);
 
     if (needsBlobFallback) {
-      showToast('视频加载中…');
+      showToast(t('toastLoading'));
       fetch(v.src)
         .then(r => {
           if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -173,10 +293,10 @@
           const blobUrl = URL.createObjectURL(blob);
           playerVideo.src = blobUrl;
           playerVideo.play().catch(() => {});
-          showToast('视频加载完成');
+          showToast(t('toastLoaded'));
         })
         .catch(err => {
-          showToast('视频加载失败，请重试');
+          showToast(t('toastLoadFail'));
           console.error('Video fetch error:', err);
         });
     } else {
@@ -212,8 +332,8 @@
 
     const shareUrl = location.origin + location.pathname + '#' + v.id;
     const shareData = {
-      title: 'HEYDAY · AI创意视频 | ' + v.title,
-      text: v.title + ' — ' + v.desc + '（来自盛世前程）',
+      title: t('shareTitlePrefix') + vTitle(v),
+      text: vTitle(v) + ' — ' + vDesc(v) + t('shareFrom'),
       url: shareUrl
     };
 
@@ -227,7 +347,7 @@
 
   // --- 复制文本 ---
   function copyText(text) {
-    const done = () => showToast('链接已复制，去粘贴转发吧');
+    const done = () => showToast(t('toastCopied'));
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
@@ -301,7 +421,7 @@
     }
   });
 
-  // ESC 关闭
+  // ESC 关闭播放器
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && overlay.classList.contains('open')) {
       closePlayer();
@@ -354,6 +474,7 @@
   window.addEventListener('hashchange', handleHash);
 
   // --- 初始化 ---
+  applyUI();
   renderChips();
   renderVideos();
 
