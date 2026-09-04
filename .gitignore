@@ -12,3 +12,4 @@ Thumbs.db
 # 忽略临时文件
 *.tmp
 *.log
+*.bak-20260904-ru
