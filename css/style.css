@@ -821,125 +821,91 @@ body {
   .scan-line { display: none; }
 }
 
-/* --- 悬浮语言切换窗 --- */
+/* ============================================================
+   悬浮语言切换胶囊（与 HEYDAY 官网同款）
+   ============================================================ */
+@keyframes lsFadeIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .lang-switcher {
   position: fixed;
-  right: 18px;
-  bottom: 24px;
-  z-index: 2000;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-}
-
-.lang-fab {
+  right: 24px;
+  bottom: 28px;
+  z-index: 1200;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 14px;
-  border: 1px solid var(--border-glow);
-  border-radius: 999px;
-  background: var(--bg-elevated);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--text-primary);
-  cursor: pointer;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), 0 0 16px var(--accent-dim);
-  transition: all var(--transition-fast);
-}
-
-.lang-fab:hover {
-  border-color: var(--accent);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55), 0 0 20px var(--accent-glow);
-  transform: translateY(-2px);
-}
-
-.lang-fab svg {
-  color: var(--accent);
-  flex-shrink: 0;
-}
-
-.lang-fab-label {
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-}
-
-.lang-panel {
-  position: absolute;
-  bottom: calc(100% + 12px);
-  right: 0;
-  min-width: 172px;
-  padding: 8px;
-  border: 1px solid var(--border-glow);
-  border-radius: var(--radius-md);
-  background: var(--bg-elevated);
+  gap: 2px;
+  padding: 5px;
+  border-radius: 100px;
+  background: rgba(12, 12, 12, 0.72);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 0 24px var(--accent-dim);
-  opacity: 0;
-  transform: translateY(8px) scale(0.96);
-  transform-origin: bottom right;
-  pointer-events: none;
-  transition: all var(--transition-fast);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 0 24px rgba(230, 0, 18, 0);
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+  animation: lsFadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 1.6s both;
 }
 
-.lang-switcher.open .lang-panel {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
+.lang-switcher:hover {
+  border-color: rgba(230, 0, 18, 0.45);
+  box-shadow:
+    0 14px 48px rgba(0, 0, 0, 0.6),
+    0 0 28px rgba(230, 0, 18, 0.22);
 }
 
-.lang-panel-title {
-  padding: 6px 10px 8px;
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-secondary);
-  letter-spacing: 0.6px;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 4px;
-}
-
-.lang-option {
+.ls-btn {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 9px 10px;
+  gap: 7px;
+  padding: 9px 16px;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 100px;
   background: transparent;
-  color: var(--text-primary);
-  font-size: 14px;
+  color: #9a9a9a;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+  white-space: nowrap;
 }
 
-.lang-option:hover {
-  background: var(--bg-card-hover);
-  color: var(--accent);
-}
-
-.lang-option .lang-check {
-  color: var(--accent);
+.ls-btn .ls-globe {
+  width: 0;
+  height: 15px;
   opacity: 0;
-  transform: scale(0.6);
-  transition: all var(--transition-fast);
+  flex: none;
+  transition: opacity 0.3s ease, width 0.3s ease;
 }
 
-.lang-option.active {
-  color: var(--accent);
-  background: var(--accent-dim);
+.lang-switcher:hover .ls-btn .ls-globe { opacity: 0.8; width: 15px; }
+
+.ls-btn.active {
+  color: #fff;
+  background: #e60012;
+  box-shadow: 0 4px 18px rgba(230, 0, 18, 0.45);
 }
 
-.lang-option.active .lang-check {
-  opacity: 1;
-  transform: scale(1);
+.ls-btn.active .ls-globe { opacity: 1; width: 15px; }
+
+.ls-btn:not(.active):hover { color: #fff; }
+
+.ls-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.14);
+  margin: 0 2px;
+  flex: none;
 }
 
-/* 移动端微调 */
-@media (max-width: 640px) {
-  .lang-switcher { right: 14px; bottom: 18px; }
-  .lang-fab { padding: 9px 12px; }
-  .lang-panel { min-width: 158px; }
+@media (max-width: 768px) {
+  .lang-switcher { right: 16px; bottom: 18px; }
+  .ls-btn { padding: 8px 13px; font-size: 11px; letter-spacing: 1px; }
+  .lang-switcher:hover .ls-btn .ls-globe,
+  .ls-btn.active .ls-globe { opacity: 0; width: 0; }
 }

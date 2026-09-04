@@ -1,6 +1,6 @@
 /**
  * HEYDAY VIDEO — 应用主逻辑
- * 视频画廊 · 搜索 · 筛选 · 播放器 · 多语言(zh-Hant/en/ru/uz)
+ * 视频画廊 · 搜索 · 筛选 · 播放器 · 多语言(zh-Hant/en/uz)
  */
 
 (function () {
@@ -24,7 +24,6 @@
     } catch (e) { /* 隐私模式等 */ }
     // 2) 首次访问按浏览器语言自动匹配
     const nav = (navigator.language || navigator.userLanguage || '').toLowerCase();
-    if (nav.indexOf('ru') === 0) return 'ru';
     if (nav.indexOf('uz') === 0) return 'uz';
     if (nav.indexOf('en') === 0) return 'en';
     if (nav.indexOf('zh') === 0) return 'zh-Hant';
@@ -64,11 +63,6 @@
   const playerTag = document.getElementById('playerTag');
   const playerShareBtn = document.getElementById('playerShareBtn');
   const toast = document.getElementById('toast');
-  const langSwitcher = document.getElementById('langSwitcher');
-  const langFab = document.getElementById('langFab');
-  const langFabLabel = document.getElementById('langFabLabel');
-  const langPanel = document.getElementById('langPanel');
-  const langPanelTitle = document.getElementById('langPanelTitle');
 
   // --- 应用静态界面文案 ---
   function applyUI() {
@@ -88,17 +82,9 @@
     playerShareBtn.setAttribute('aria-label', t('shareBtn'));
     playerShareBtn.title = t('shareBtn');
     document.getElementById('footerCompany').textContent = t('footerCompany');
-    // 悬浮窗
-    const cur = I18N.langs.find(l => l.code === currentLang);
-    langFabLabel.textContent = cur ? cur.short : '中';
-    langFab.title = t('langFabTitle');
-    langFab.setAttribute('aria-label', t('langFabTitle'));
-    langPanelTitle.textContent = currentLang === 'zh-Hant' ? '語言 / Language'
-      : (currentLang === 'en' ? 'Language / Язык'
-      : (currentLang === 'ru' ? 'Язык / Til' : 'Til / Language'));
-    // 语言选项选中态
-    langPanel.querySelectorAll('.lang-option').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.lang === currentLang);
+    // 语言切换器当前项高亮（与官网同款）
+    document.querySelectorAll('[data-lang-btn]').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-lang-btn') === currentLang);
     });
   }
 
@@ -119,24 +105,11 @@
         playerTag.textContent = tv(v.id, 'tag') || catName(v.category);
       }
     }
-    closeLangPanel();
   }
 
-  // --- 悬浮窗交互 ---
-  function closeLangPanel() {
-    langSwitcher.classList.remove('open');
-  }
-  langFab.addEventListener('click', (e) => {
-    e.stopPropagation();
-    langSwitcher.classList.toggle('open');
-  });
-  langPanel.addEventListener('click', (e) => e.stopPropagation());
-  langPanel.querySelectorAll('.lang-option').forEach(btn => {
-    btn.addEventListener('click', () => setLang(btn.dataset.lang));
-  });
-  document.addEventListener('click', () => closeLangPanel());
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeLangPanel();
+  // --- 语言切换器：直点切换（与官网同款） ---
+  document.querySelectorAll('[data-lang-btn]').forEach(btn => {
+    btn.addEventListener('click', () => setLang(btn.getAttribute('data-lang-btn')));
   });
 
   // --- 获取分类 ---
