@@ -410,7 +410,12 @@
   // --- 三站链接按访问区域自动切换（海外→GitHub Pages 镜像，国内→自建服务器） ---
   (function routeByRegion() {
     var HOST = location.hostname || '';
-    if (!/(^|\.)github\.io$/i.test(HOST)) return;
+    var IS_OVERSEAS = /(^|\.)github\.io$/i.test(HOST);
+    var pref = 'auto';
+    try { pref = localStorage.getItem('heyday_node_pref') || 'auto'; } catch (e) {}
+    if (pref !== 'cn' && pref !== 'os') pref = 'auto';
+    var WANT_OVERSEAS = pref === 'os' ? true : (pref === 'cn' ? false : IS_OVERSEAS);
+    if (!WANT_OVERSEAS) return;
     var MAP = [
       [/^https?:\/\/heydaygroup\.bydtyr\.com/i, 'https://kinozhao9205.github.io/heyday-site'],
       [/^https?:\/\/tuiguang\.bydtyr\.com/i, 'https://kinozhao9205.github.io/shengshi-videos'],
