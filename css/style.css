@@ -78,32 +78,124 @@ body {
   100% { transform: translateY(100vh); }
 }
 
-/* --- 顶部导航 --- */
-.topbar {
+/* --- 顶部导航（与官网同款，三站互通） --- */
+.site-nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(10, 14, 26, 0.8);
-  backdrop-filter: blur(20px) saturate(1.5);
-  -webkit-backdrop-filter: blur(20px) saturate(1.5);
-  border-bottom: 1px solid var(--border-subtle);
-  transition: all var(--transition-smooth);
+  padding: 14px 0;
+  background: transparent;
+  transition: background var(--transition-smooth), padding var(--transition-smooth), backdrop-filter var(--transition-smooth);
 }
 
-.topbar.scrolled {
-  background: rgba(10, 14, 26, 0.95);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+.site-nav.scrolled {
+  background: rgba(7, 7, 7, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 10px 0;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
 }
 
-.topbar-inner {
-  max-width: 1400px;
+.site-nav .nav-container {
+  width: min(1280px, 92vw);
   margin: 0 auto;
-  padding: 0 16px;
-  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+}
+
+.site-nav .nav-logo {
+  flex-shrink: 0;
+  display: block;
+}
+
+.site-nav .nav-logo img {
+  display: block;
+  height: 40px;
+  width: auto;
+  max-width: 180px;
+}
+
+.site-nav .nav-links {
+  display: flex;
+  list-style: none;
+  gap: 26px;
+}
+
+.site-nav .nav-links a {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.66);
+  position: relative;
+  transition: color 0.3s;
+}
+
+.site-nav .nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #e60012;
+  transition: width 0.3s var(--transition-smooth);
+}
+
+.site-nav .nav-links a:hover { color: #fff; }
+.site-nav .nav-links a:hover::after { width: 100%; }
+
+/* 当前站点高亮（红色常亮下划线） */
+.site-nav .nav-links a.nav-here { color: #fff; font-weight: 700; }
+.site-nav .nav-links a.nav-here::after { width: 100%; }
+
+.site-nav .nav-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.site-nav .nav-toggle span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #fff;
+  transition: 0.3s;
+}
+
+.site-nav .nav-links.active {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(7, 7, 7, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 24px;
+  gap: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-nav .nav-toggle.active span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.site-nav .nav-toggle.active span:nth-child(2) { opacity: 0; }
+.site-nav .nav-toggle.active span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+@media (max-width: 1200px) {
+  .site-nav .nav-links { gap: 18px; }
+  .site-nav .nav-links a { font-size: 12px; letter-spacing: 0.3px; }
+}
+
+@media (max-width: 1024px) {
+  .site-nav .nav-links { display: none; }
+  .site-nav .nav-toggle { display: flex; }
 }
 
 .brand {
@@ -140,44 +232,6 @@ body {
   font-size: 13px;
   letter-spacing: 1px;
 }
-
-/* 搜索框 */
-.topbar-search {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: 100px;
-  padding: 0 14px;
-  height: 38px;
-  transition: all var(--transition-fast);
-  flex: 1;
-  max-width: 320px;
-}
-
-.topbar-search:focus-within {
-  border-color: var(--border-glow);
-  box-shadow: 0 0 0 3px var(--accent-dim);
-  background: rgba(0, 212, 255, 0.03);
-}
-
-.search-icon {
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-#searchInput {
-  background: none;
-  border: none;
-  outline: none;
-  color: var(--text-primary);
-  font-size: 14px;
-  width: 100%;
-  font-family: inherit;
-}
-
-#searchInput::placeholder { color: var(--text-muted); }
 
 /* --- Hero 区域 --- */
 .hero {
@@ -768,7 +822,6 @@ body {
 
 /* --- 平板适配 --- */
 @media (min-width: 640px) {
-  .topbar-inner { padding: 0 24px; height: 60px; }
   .filter-bar { top: 60px; }
   .filter-chips { padding: 0 24px; }
   .hero { padding: 64px 24px 40px; }
@@ -784,7 +837,6 @@ body {
 
 /* --- 桌面适配 --- */
 @media (min-width: 1024px) {
-  .topbar-inner { padding: 0 32px; height: 64px; }
   .filter-bar { top: 64px; }
   .filter-chips { padding: 0 32px; }
   .hero { padding: 80px 32px 48px; }

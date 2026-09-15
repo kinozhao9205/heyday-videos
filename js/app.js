@@ -68,7 +68,11 @@
   function applyUI() {
     document.title = t('pageTitle');
     document.documentElement.lang = currentLang;
-    searchInput.placeholder = t('searchPlaceholder');
+    if (searchInput) searchInput.placeholder = t('searchPlaceholder');
+    // 顶部导航文案（与官网统一）
+    document.querySelectorAll('.nav-links a[data-nav]').forEach(a => {
+      a.textContent = t(a.getAttribute('data-nav'));
+    });
     document.querySelector('.title-line-1').textContent = t('heroTitle');
     document.querySelector('.hero-desc').textContent = t('heroDesc');
     const statLabels = document.querySelectorAll('.stat-label');
@@ -351,15 +355,17 @@
     toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
   }
 
-  // --- 搜索 ---
+  // --- 搜索（导航栏移除搜索框后需空值保护）---
   let searchTimer;
-  searchInput.addEventListener('input', (e) => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-      currentSearch = e.target.value.trim().toLowerCase();
-      renderVideos();
-    }, 200);
-  });
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        currentSearch = e.target.value.trim().toLowerCase();
+        renderVideos();
+      }, 200);
+    });
+  }
 
   // --- 播放器关闭事件 ---
   playerClose.addEventListener('click', closePlayer);
@@ -400,6 +406,22 @@
       closePlayer();
     }
   });
+
+  // --- 移动端汉堡菜单（与官网同款） ---
+  const navToggle = document.querySelector('.site-nav .nav-toggle');
+  if (navToggle) {
+    const navLinks = document.querySelector('.site-nav .nav-links');
+    navToggle.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      navToggle.classList.toggle('active');
+    });
+    navLinks.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        navLinks.classList.remove('active');
+        navToggle.classList.remove('active');
+      });
+    });
+  }
 
   // --- 滚动效果 ---
   let scrollTimer;

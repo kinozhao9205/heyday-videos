@@ -29,6 +29,31 @@ const I18N = {
       en: 'Search videos...',
       uz: 'Videolarni qidirish...'
     },
+    // 顶部导航（与官网统一，三站互通）
+    navAbout: {
+      'zh-Hant': '關於我們', en: 'About', uz: 'Biz haqimizda'
+    },
+    navHistory: {
+      'zh-Hant': '發展歷程', en: 'History', uz: 'Tariximiz'
+    },
+    navServices: {
+      'zh-Hant': '業務優勢', en: 'Services', uz: 'Xizmatlar'
+    },
+    navCases: {
+      'zh-Hant': '營銷案例', en: 'Cases', uz: 'Loyihalar'
+    },
+    navAiVideo: {
+      'zh-Hant': 'AI創意', en: 'AI Creative', uz: 'AI Ijod'
+    },
+    navPromoVideo: {
+      'zh-Hant': '推廣視頻', en: 'Promo Videos', uz: 'Reklama Videolari'
+    },
+    navTeam: {
+      'zh-Hant': '團隊', en: 'Team', uz: 'Jamoa'
+    },
+    navContact: {
+      'zh-Hant': '聯絡我們', en: 'Contact', uz: 'Aloqa'
+    },
     heroTitle: {
       'zh-Hant': 'AI 創意視頻集',
       en: 'AI Creative Video Collection',
