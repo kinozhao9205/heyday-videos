@@ -407,6 +407,27 @@
     }
   });
 
+  // --- 三站链接按访问区域自动切换（海外→GitHub Pages 镜像，国内→自建服务器） ---
+  (function routeByRegion() {
+    var HOST = location.hostname || '';
+    if (!/(^|\.)github\.io$/i.test(HOST)) return;
+    var MAP = [
+      [/^https?:\/\/heydaygroup\.bydtyr\.com/i, 'https://kinozhao9205.github.io/heyday-site'],
+      [/^https?:\/\/tuiguang\.bydtyr\.com/i, 'https://kinozhao9205.github.io/shengshi-videos'],
+      [/^https?:\/\/video\.bydtyr\.com/i, 'https://kinozhao9205.github.io/heyday-videos']
+    ];
+    document.querySelectorAll('.site-nav a[href]').forEach(function (a) {
+      var href = a.getAttribute('href');
+      if (!href) return;
+      for (var i = 0; i < MAP.length; i++) {
+        if (MAP[i][0].test(href)) {
+          a.setAttribute('href', href.replace(MAP[i][0], MAP[i][1]).replace(/([^:])\/{2,}/g, '$1/'));
+          break;
+        }
+      }
+    });
+  })();
+
   // --- 移动端汉堡菜单（与官网同款） ---
   const navToggle = document.querySelector('.site-nav .nav-toggle');
   if (navToggle) {
